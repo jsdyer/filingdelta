@@ -13,12 +13,37 @@ from urllib.request import Request, urlopen
 ROOT = Path(__file__).resolve().parents[1]
 USER_AGENT = os.environ.get("SEC_USER_AGENT", "CoolCode FilingDelta Jeffrey Dyer jeffdyer@gmail.com")
 COMPANIES = [
+    # Original six
     ("0001594805", "Canada", "Shopify"),
     ("0001000275", "Canada", "Royal Bank of Canada"),
     ("0001017413", "Canada", "Canadian Natural Resources"),
     ("0000320193", "United States", "Apple"),
     ("0000789019", "United States", "Microsoft"),
     ("0001018724", "United States", "Amazon"),
+
+    # 12 additional Canadian companies
+    ("0001070235", "Canada", "BlackBerry"),                       # BB
+    ("0000718940", "Canada", "BCE"),                              # BCE
+    ("0000927971", "Canada", "Bank of Montreal"),                 # BMO
+    ("0000009631", "Canada", "Bank of Nova Scotia"),               # BNS
+    ("0001045520", "Canada", "Canadian Imperial Bank of Commerce"),  # CM
+    ("0000016868", "Canada", "Canadian National Railway"),        # CNR / CNI
+    ("0001725964", "Canada", "Nutrien"),                          # NTR
+    ("0001618756", "Canada", "Restaurant Brands International"),  # QSR
+    ("0001097362", "Canada", "Sun Life Financial"),                # SLF
+    ("0000311337", "Canada", "Suncor Energy"),                     # SU
+    ("0000947263", "Canada", "Toronto-Dominion Bank"),             # TD
+    ("0001323404", "Canada", "Wheaton Precious Metals"),           # WPM
+
+    # Eight additional U.S. companies
+    ("0000796343", "United States", "Adobe"),                     # ADBE
+    ("0000012927", "United States", "Boeing"),                     # BA
+    ("0000858877", "United States", "Cisco Systems"),              # CSCO
+    ("0001744489", "United States", "Walt Disney"),                # DIS
+    ("0001652044", "United States", "Alphabet"),                   # GOOG / GOOGL
+    ("0001326801", "United States", "Meta Platforms"),             # META
+    ("0000077476", "United States", "PepsiCo"),                    # PEP
+    ("0000804328", "United States", "Qualcomm"),                   # QCOM
 ]
 CONCEPTS = {
     "us-gaap": {
