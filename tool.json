@@ -17,6 +17,6 @@
   "access": "browser",
   "data_info": {
     "mode": "snapshot",
-    "detail": "Dated SEC EDGAR filings and selected financial facts for six Canadian and US companies; refreshed daily."
+    "detail": "Dated SEC EDGAR filings and selected financial facts from a configurable company watchlist; refreshed daily."
   }
 }

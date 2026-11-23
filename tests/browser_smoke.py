@@ -29,12 +29,14 @@ def main():
                 errors = []
                 page.on("pageerror", lambda error: errors.append(str(error)))
                 page.goto(f"http://127.0.0.1:{server.server_port}/example-tool/")
-                page.locator('#companyName').filter(has_text='Shopify').wait_for()
+                page.locator('[data-cik="0001594805"]').wait_for()
+                page.locator('[data-cik="0001594805"]').click()
+                assert page.locator('#companyName').inner_text() == 'Shopify'
                 assert page.locator('#currentValue').inner_text().startswith('USD ')
                 assert page.locator('#periodRows tr').count() > 0
                 page.locator('#companySearch').fill('Royal')
-                assert page.locator('.company-button').count() == 1
-                page.locator('.company-button').click()
+                assert page.locator('[data-cik="0001000275"]').is_visible()
+                page.locator('[data-cik="0001000275"]').click()
                 assert page.locator('#companyName').inner_text() == 'Royal Bank of Canada'
                 assert page.locator('#unit').input_value() == 'CAD'
                 assert page.locator('#metric').input_value() == 'ifrs-full:Revenue'

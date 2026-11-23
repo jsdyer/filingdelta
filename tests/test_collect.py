@@ -1,9 +1,14 @@
 import copy
+import json
 from pathlib import Path
+import re
 import sys
+import tempfile
 import unittest
+from unittest.mock import patch
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
-from collect import normalize, filing_url
+import collect as collector
+from collect import normalize, filing_url, validate_companies
 from validate_data import validate
 
 
@@ -48,6 +53,64 @@ class CollectionTests(unittest.TestCase):
 
     def test_real_published_collection_validates_offline(self):
         self.assertGreaterEqual(validate(),1)
+
+    def test_adding_a_seventh_company_populates_a_new_capture_and_preserves_old_coverage(self):
+        companies = [(f'{i:010d}', 'Canada', f'Example {i}') for i in range(1, 8)]
+        def source(url):
+            cik = re.search(r'CIK([0-9]{10})', url).group(1)
+            payload = copy.deepcopy(self.facts if '/companyfacts/' in url else self.submissions)
+            payload['cik'] = int(cik)
+            payload['tickers'] = [f'TEST{int(cik)}']
+            return payload, {'url': url, 'sha256': 'a' * 64, 'bytes': 100}
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            with patch.object(collector, 'ROOT', root), patch.object(collector, 'fetch', side_effect=source), patch.object(collector.time, 'sleep'):
+                # Save an older six-company capture, then change only the configuration.
+                with patch.object(collector, 'COMPANIES', companies[:6]):
+                    collector.collect()
+                index_path = root / 'data/index.json'
+                old_index = json.loads(index_path.read_text())
+                old_path = root / 'data' / old_index['latest']
+                archived_path = root / 'data/history/2020-01-01T000000Z.json'
+                old_path.rename(archived_path)
+                old_index['latest'] = 'history/' + archived_path.name
+                old_index['captures'][0]['path'] = old_index['latest']
+                index_path.write_text(json.dumps(old_index))
+                original = archived_path.read_bytes()
+                with patch.object(collector, 'COMPANIES', companies):
+                    collector.collect()
+                current = json.loads((root / 'data' / json.loads(index_path.read_text())['latest']).read_text())
+                self.assertEqual(len(current['companies']), 7)
+                self.assertEqual(current['companies'][-1]['displayName'], 'Example 7')
+                self.assertEqual(current['companies'][-1]['tickers'], ['TEST7'])
+                self.assertEqual(archived_path.read_bytes(), original)
+                self.assertEqual(validate(root), 2)
+                before_failure = index_path.read_bytes()
+                with patch.object(collector, 'COMPANIES', companies + [('0000000008', 'Canada', 'Unavailable')]), patch.object(collector, 'fetch', side_effect=OSError('Source unavailable')):
+                    with self.assertRaises(OSError):
+                        collector.collect()
+                self.assertEqual(index_path.read_bytes(), before_failure)
+
+    def test_configuration_rejects_bad_and_duplicate_ciks_before_fetching(self):
+        valid = ('0000000001', 'Canada', 'Example')
+        for bad in ([], [valid, valid], [('1', 'Canada', 'Example')], [('0000000000', 'Canada', 'Example')], [('0000000001', '', 'Example')], [('0000000001', 'Canada')]):
+            with self.subTest(companies=bad), patch.object(collector, 'COMPANIES', bad), patch.object(collector, 'fetch') as fetch:
+                with self.assertRaises(ValueError):
+                    collector.collect()
+                fetch.assert_not_called()
+        validate_companies([valid])
+
+    def test_capture_rejects_empty_or_duplicate_company_identities(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            (root / 'data/history').mkdir(parents=True)
+            path = 'history/2025-01-01T000000Z.json'
+            (root / 'data/index.json').write_text(json.dumps({'latest': path, 'captures': [{'path': path}]}))
+            company = self.normalize()
+            for companies in ([], [company, company]):
+                (root / 'data' / path).write_text(json.dumps({'schemaVersion': 1, 'companies': companies}))
+                with self.assertRaises(ValueError):
+                    validate(root)
 
 
 if __name__ == '__main__': unittest.main()

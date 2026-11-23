@@ -17,9 +17,16 @@ def validate(root=ROOT):
         if not re.fullmatch(r"history/[0-9TZ-]+\.json", path):
             raise ValueError("Unexpected capture path")
         capture = json.loads((data / path).read_text())
-        if capture["schemaVersion"] != 1 or len(capture["companies"]) != 6:
-            raise ValueError("Capture requires six companies")
-        for company in capture["companies"]:
+        companies = capture.get("companies")
+        if capture.get("schemaVersion") != 1 or not isinstance(companies, list) or not companies:
+            raise ValueError("Capture requires a nonempty company list")
+        # A historical capture keeps its original coverage even when the watchlist changes.
+        seen = set()
+        for company in companies:
+            cik = company.get("cik")
+            if not isinstance(cik, str) or not re.fullmatch(r"[0-9]{10}", cik) or int(cik) == 0 or cik in seen:
+                raise ValueError("Capture requires unique ten-digit company CIKs")
+            seen.add(cik)
             if not company["filings"] or not company["metrics"] or not company["capturedAt"]:
                 raise ValueError("Empty company record")
             for source in company["sources"]:

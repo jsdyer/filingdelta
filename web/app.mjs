@@ -22,6 +22,7 @@ async function loadCapture(path){
   if(sequence!==requestSequence)return;
   activeCapturePath=path;const previousCIK=company?.cik;data=next;company=data.companies.find(c=>c.cik===previousCIK)||data.companies[0];
   $('captureDate').textContent=date(data.capturedAt)+' · '+data.capturedAt.slice(11,16)+' UTC';
+  $('sampleSize').textContent=String(data.companies.length).padStart(2,'0')+' COMPANIES';
   $('companyCount').textContent=data.companies.length;$('filingCount').textContent=data.companies.reduce((a,c)=>a+c.filings.length,0).toLocaleString();
   $('captureCount').textContent=manifest.captures.length;
   $('snapshotNote').textContent=manifest.captures.length===1?'One collection capture is retained so far. Earlier SEC filing records are included in this first capture; collection-to-collection history will grow after future successful runs.':`${manifest.captures.length} collection captures are retained. Use Dated capture to inspect an earlier saved collection.`;
@@ -32,7 +33,7 @@ function renderCompanies(){
   if(!data)return;
   const q=$('companySearch').value.trim().toLowerCase();const container=$('companies');container.replaceChildren();
   for(const c of data.companies.filter(c=>[c.name,c.displayName,c.cik,...c.tickers].join(' ').toLowerCase().includes(q))){
-    const button=el('button',undefined,'company-button');button.type='button';button.dataset.cik=c.cik;button.setAttribute('aria-pressed',String(c.cik===company.cik));button.append(el('strong',c.displayName),el('span',`${c.tickers.slice(0,2).join(' / ')||'SEC FILER'} · ${c.country==='Canada'?'CA':'US'}`));button.addEventListener('click',()=>selectCompany(c.cik));container.append(button);
+    const button=el('button',undefined,'company-button');button.type='button';button.dataset.cik=c.cik;button.setAttribute('aria-pressed',String(c.cik===company.cik));button.append(el('strong',c.displayName),el('span',`${c.tickers.slice(0,2).join(' / ')||'SEC FILER'} · ${c.country==='Canada'?'CA':c.country==='United States'?'US':c.country}`));button.addEventListener('click',()=>selectCompany(c.cik));container.append(button);
   }
   if(!container.children.length)container.append(el('p','No companies in this sample match.','small-note'));
 }

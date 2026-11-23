@@ -3,7 +3,7 @@
 A public, browser-based SEC EDGAR explorer at [coolcode.ca/filingdelta/](https://coolcode.ca/filingdelta/). Compare reported financial periods, inspect different values reported for an identical period, and follow the original filings. No API key or financial account is needed.
 
 <!-- coolcode:guide -->
-Choose Shopify, Royal Bank of Canada, Canadian Natural Resources, Apple, Microsoft or Amazon, then select a financial concept, currency and period basis. The ledger compares exact reported periods and links each value to its SEC filing; a changed value may reflect a recast or context difference, not necessarily a restatement. Daily captures retain selected standard financial facts from 2018 onward, not a complete company or filing universe.
+Choose a company from the watchlist, then select a financial concept, currency and period basis. The ledger compares exact reported periods and links each value to its SEC filing; a changed value may reflect a recast or context difference, not necessarily a restatement. Daily captures retain selected standard financial facts from 2018 onward, not a complete company or filing universe.
 <!-- /coolcode:guide -->
 
 ## What works
@@ -34,7 +34,7 @@ A changed value is a comparison signal, not an accounting conclusion. Recasts, c
 
 `.github/workflows/pages.yml` runs at **08:45 UTC daily**, on pushes/PRs and manually. Schedules may be delayed by GitHub. The visible capture time is the actual successful collection timestamp. Manual runs offer `refresh_data`; ordinary push and PR builds are offline.
 
-The six-company collector makes requests sequentially, at least one second apart, using:
+The collector makes two requests per configured company sequentially, at least one second apart, using:
 
 ```
 CoolCode FilingDelta Jeffrey Dyer jeffdyer@gmail.com
@@ -42,9 +42,19 @@ CoolCode FilingDelta Jeffrey Dyer jeffdyer@gmail.com
 
 This identifies the app and contact under SEC fair access and remains well below the SEC's 10 requests/second limit. `SEC_USER_AGENT` can override the identity for a fork; it must include a contact email. No secret is required for this deployment.
 
-All twelve responses must parse and validate before a new snapshot is written. HTTP failures, invalid CIKs, malformed values or empty company results abort the refresh. The deployment and committed prior capture remain unchanged. Source response hashes identify the fetched inputs; the published data is a filtered normalized derivative, not the full raw API responses.
+All responses for every configured company must parse and validate before a new snapshot is written. HTTP failures, invalid CIKs, malformed values or empty company results abort the refresh. The deployment and committed prior capture remain unchanged. Source response hashes identify the fetched inputs; the published data is a filtered normalized derivative, not the full raw API responses.
 
 `data/history/<UTC-timestamp>.json` holds each successful capture, and `data/index.json` selects the latest. The latest 90 successful captures are published in the date selector; older committed captures remain retrievable through Git history. This bounds the static site size while preserving the filing-level history within each snapshot. The workflow validates data, runs unit checks and browser smoke tests, and only then commits the data update and publishes. Git history additionally preserves changes. A new app initially has one collection capture; source filing history can already be much older.
+
+## Add companies to the watchlist
+
+Edit `COMPANIES` in `scripts/collect.py`. Each entry is `("10-digit SEC CIK", "country label", "display name")`; keep the CIK as a quoted string with leading zeroes. Find it on the company's SEC EDGAR company page. Do not put a stock ticker in the CIK field or repeat an existing CIK.
+
+After committing to `main`, either wait for the next daily collection or open **Actions → Filing Delta · Collect, check and publish → Run workflow**, select **main**, enable **Refresh the configured SEC company watchlist before publishing** (`refresh_data`), and run it. An ordinary push rebuilds the existing snapshot; it does not fetch newly added companies.
+
+On a successful refresh, names, tickers, selected financial concepts, filing links, counts and filters populate automatically from SEC data. Earlier captures retain their original company coverage. The initial watchlist contains six companies, but collection and validation do not impose that count.
+
+A new company must have usable SEC Submissions and Company Facts data for this tool's selected concepts and periods. A Canadian listing alone does not establish that SEC data exists. A bad CIK, failed response or company with no usable selected facts stops the refresh and preserves the last good published capture; the failed Actions step identifies the problem. Larger lists increase collection time and published snapshot size.
 
 ## Privacy and browser behavior
 

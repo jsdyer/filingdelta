@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
     inputs:
       refresh_data:
-        description: Refresh the six-company SEC collection before publishing
+        description: Refresh the configured SEC company watchlist before publishing
         type: boolean
         default: false
 permissions:

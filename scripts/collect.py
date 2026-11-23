@@ -112,7 +112,26 @@ def fetch(url):
     return json.loads(content), {"url": url, "sha256": hashlib.sha256(content).hexdigest(), "bytes": len(content)}
 
 
+def validate_companies(companies):
+    """Reject configuration mistakes before making source requests."""
+    if not isinstance(companies, (list, tuple)) or not companies:
+        raise ValueError("COMPANIES must contain at least one company")
+    seen = set()
+    for entry in companies:
+        if not isinstance(entry, (list, tuple)) or len(entry) != 3:
+            raise ValueError("Each company needs (CIK, country, display name)")
+        cik, country, name = entry
+        if not isinstance(cik, str) or not re.fullmatch(r"[0-9]{10}", cik) or int(cik) == 0:
+            raise ValueError("Use a ten-digit SEC CIK string, including leading zeroes")
+        if cik in seen:
+            raise ValueError(f"Duplicate company CIK: {cik}")
+        if not all(isinstance(value, str) and value.strip() for value in (country, name)):
+            raise ValueError("Company country and display name cannot be empty")
+        seen.add(cik)
+
+
 def collect():
+    validate_companies(COMPANIES)
     if "@" not in USER_AGENT or len(USER_AGENT) < 20:
         raise ValueError("SEC_USER_AGENT must identify the application and a contact email")
     now = datetime.now(timezone.utc).replace(microsecond=0)
