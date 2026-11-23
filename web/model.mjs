@@ -1,4 +1,13 @@
 /** Pure, exact-context comparisons: no fiscal-quarter reconstruction. */
+export function metricLabel(metric) {
+  if (typeof metric.label === 'string' && metric.label.trim()) return metric.label;
+  return metric.id.split(':').at(-1).replace(/([a-z])([A-Z])/g, '$1 $2');
+}
+export function orderedMetrics(metrics) {
+  const rank = metric => /RevenueFromContract|:Revenue$|:Revenues$|:SalesRevenueNet$/.test(metric.id) ? 0 : /:Assets$/.test(metric.id) ? 1 : 2;
+  const latest = metric => metric.facts.reduce((value, fact) => fact.end > value ? fact.end : value, '');
+  return [...metrics].sort((a, b) => rank(a) - rank(b) || latest(b).localeCompare(latest(a)) || metricLabel(a).localeCompare(metricLabel(b)));
+}
 export function durationDays(start, end) {
   if (!start) return null;
   return Math.round((Date.parse(end) - Date.parse(start)) / 86400000) + 1;

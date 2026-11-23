@@ -25,6 +25,12 @@ class CollectionTests(unittest.TestCase):
         self.assertEqual(company['filings'][0]['url'],'https://www.sec.gov/Archives/edgar/data/1/000000000125000001/report.htm')
         self.assertTrue(fact['url'].endswith('0000000001-25-000001-index.html'))
 
+    def test_null_sec_ifrs_labels_fall_back_to_the_concept(self):
+        self.facts['facts']['ifrs-full']['Revenue'].update(label=None, description=None)
+        metric=self.normalize()['metrics'][0]
+        self.assertEqual(metric['label'],'Revenue')
+        self.assertEqual(metric['description'],'')
+
     def test_mismatched_companies_and_ragged_submission_columns_fail(self):
         self.facts['cik']=2
         with self.assertRaisesRegex(ValueError,'CIK'): self.normalize()

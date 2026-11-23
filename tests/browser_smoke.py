@@ -37,6 +37,11 @@ def main():
                 page.locator('.company-button').click()
                 assert page.locator('#companyName').inner_text() == 'Royal Bank of Canada'
                 assert page.locator('#unit').input_value() == 'CAD'
+                assert page.locator('#metric').input_value() == 'ifrs-full:Revenue'
+                assert page.locator('#currentValue').inner_text().startswith('CAD ')
+                assert '/1000275/' in page.locator('#currentSource').get_attribute('href')
+                assert '/1000275/' in page.locator('#previousSource').get_attribute('href')
+                assert '/1000275/' in page.locator('#filings a').first.get_attribute('href')
                 assert page.locator('#currentSource').get_attribute('href').startswith('https://www.sec.gov/Archives/')
                 page.locator('#periodType').select_option('annual')
                 assert page.locator('#changes .change-card').count() > 0
@@ -49,7 +54,12 @@ def main():
                 assert page.locator('.company-button').count() == 0
                 assert page.locator('img').count() == 0
                 page.locator('#companySearch').fill('')
+                page.locator('[data-cik="0001017413"]').click()
+                assert page.locator('#unit').input_value() == 'CAD'
+                assert '/1017413/' in page.locator('#currentSource').get_attribute('href')
                 page.locator('[data-cik="0000320193"]').click()
+                assert page.locator('#unit').input_value() == 'USD'
+                assert '/320193/' in page.locator('#currentSource').get_attribute('href')
                 page.locator('#metric').select_option('us-gaap:Assets')
                 assert page.locator('#periodType').input_value() == 'instant'
                 assert page.locator('#previousPeriod option').count() > 0

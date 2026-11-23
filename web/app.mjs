@@ -1,4 +1,4 @@
-import { periodsFor, difference, compactNumber, durationDays, csv, safeSourceURL } from './model.mjs';
+import { periodsFor, difference, compactNumber, durationDays, csv, safeSourceURL, metricLabel, orderedMetrics } from './model.mjs';
 const $ = id => document.getElementById(id);
 const typeLabels = { annual:'Annual (~12 months)',quarter:'About 3 months',half:'About 6 months',nine:'About 9 months',instant:'Point in time',other:'Other duration' };
 let data, manifest, company, metric, periods=[], shownPeriods=12, shownFilings=9, shownChanges=6;
@@ -41,12 +41,12 @@ function selectCompany(cik){
   $('companyName').textContent=company.displayName;$('companyMeta').textContent=company.country+' / SEC REPORTING COMPANY';
   $('companyIdentity').textContent=`${company.name} · CIK ${company.cik}`;
   $('companySource').href=`https://www.sec.gov/edgar/browse/?CIK=${company.cik}&owner=exclude`;
-  const ordered=[...company.metrics].sort((a,b)=>{const rank=x=>/RevenueFromContract|:Revenue$|:Revenues$|:SalesRevenueNet$/.test(x.id)?0:/:Assets$/.test(x.id)?1:2;const latest=x=>x.facts.reduce((v,f)=>f.end>v?f.end:v,'');return rank(a)-rank(b)||latest(b).localeCompare(latest(a))||a.label.localeCompare(b.label);});
-  options('metric',ordered.map(m=>[m.id,m.label]));
+  const ordered=orderedMetrics(company.metrics);
+  options('metric',ordered.map(m=>[m.id,metricLabel(m)]));
   options('filingForm',[['all','All selected forms'],...[...new Set(company.filings.map(f=>f.form))].sort().map(f=>[f,f])]);
   selectMetric();renderFilings();renderProvenance();
 }
-function selectMetric(){metric=company.metrics.find(m=>m.id===$('metric').value);options('unit',[...new Set(metric.facts.map(f=>f.unit))].sort().map(v=>[v,v]));$('conceptDescription').textContent=metric.id;$('conceptDescription').title=metric.description;selectUnit();}
+function selectMetric(){metric=company.metrics.find(m=>m.id===$('metric').value);options('unit',[...new Set(metric.facts.map(f=>f.unit))].sort().map(v=>[v,v]));$('conceptDescription').textContent=metric.id;$('conceptDescription').title=metric.description||'';selectUnit();}
 function selectUnit(){const all=periodsFor(metric,$('unit').value);const available=new Set(all.map(p=>p.type));options('periodType',Object.keys(typeLabels).filter(k=>available.has(k)).map(k=>[k,typeLabels[k]]));selectType();}
 function selectType(){shownPeriods=12;shownChanges=6;periods=periodsFor(metric,$('unit').value).filter(p=>p.type===$('periodType').value);options('currentPeriod',periods.map(p=>[p.key,periodLabel(p)]));selectCurrent();renderHistory();renderChanges();}
 function selectCurrent(){const old=$('previousPeriod').value;const choices=periods.filter(p=>p.key!==$('currentPeriod').value);options('previousPeriod',choices.map(p=>[p.key,periodLabel(p)]),old);if(!choices.length)options('previousPeriod',[['','No other comparable period']]);renderComparison();}
@@ -66,7 +66,7 @@ function renderComparison(){
 function renderHistory(){
   const chart=$('chart');chart.replaceChildren();const points=periods.filter(p=>p.value!==null).slice(0,10).reverse();
   if(!points.length){chart.append(el('p','No unambiguous figures for this selection.'));}else{
-    const ns='http://www.w3.org/2000/svg',svg=document.createElementNS(ns,'svg');svg.setAttribute('viewBox','0 0 700 190');svg.setAttribute('role','img');svg.setAttribute('aria-label',`${metric.label}, ${$('unit').value}, latest reported values for ${points.length} periods`);
+    const ns='http://www.w3.org/2000/svg',svg=document.createElementNS(ns,'svg');svg.setAttribute('viewBox','0 0 700 190');svg.setAttribute('role','img');svg.setAttribute('aria-label',`${metricLabel(metric)}, ${$('unit').value}, latest reported values for ${points.length} periods`);
     const max=Math.max(...points.map(p=>Math.abs(p.value)),1),hasNegative=points.some(p=>p.value<0),zero=hasNegative?92:145,scale=(hasNegative?65:110)/max,width=650/points.length;
     const line=document.createElementNS(ns,'line');for(const[k,v]of Object.entries({x1:25,y1:zero,x2:685,y2:zero,class:'zero'}))line.setAttribute(k,v);svg.append(line);
     points.forEach((p,i)=>{const x=29+i*width,height=Math.abs(p.value)*scale;const rect=document.createElementNS(ns,'rect');for(const[k,v]of Object.entries({x:x+width*.17,y:p.value>=0?zero-height:zero,width:width*.58,height:Math.max(height,1),rx:2,class:'bar'}))rect.setAttribute(k,v);const title=document.createElementNS(ns,'title');title.textContent=`${periodLabel(p)}: ${exact(p.value,p.unit)}`;rect.append(title);svg.append(rect);

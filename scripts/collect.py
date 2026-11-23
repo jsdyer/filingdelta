@@ -93,8 +93,8 @@ def normalize(cik, country, display_name, submissions, companyfacts, captured_at
                         "frame": point.get("frame"), "url": filing_url(cik, accn),
                     })
             if records:
-                metrics.append({"id": f"{taxonomy}:{concept}", "label": raw.get("label", concept),
-                                "description": raw.get("description", ""), "facts": records})
+                metrics.append({"id": f"{taxonomy}:{concept}", "label": raw.get("label") or concept,
+                                "description": raw.get("description") or "", "facts": records})
     if not metrics or not filings:
         raise ValueError(f"No usable facts/filings for {display_name}")
     return {"cik": cik, "name": submissions["name"], "displayName": display_name, "country": country,

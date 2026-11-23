@@ -1,6 +1,7 @@
 import test from 'node:test';
+import fs from 'node:fs';
 import assert from 'node:assert/strict';
-import { periodsFor, difference, durationDays, periodType, csv, safeSourceURL } from '../web/model.mjs';
+import { periodsFor, difference, durationDays, periodType, csv, safeSourceURL, metricLabel, orderedMetrics } from '../web/model.mjs';
 const point=(overrides={})=>({start:'2024-01-01',end:'2024-12-31',unit:'CAD',value:100,filed:'2025-02-01',accession:'0000000001-25-000001',form:'40-F',...overrides});
 test('groups only the exact date range and unit, preserving changed reported values',()=>{
  const facts=[point(),point(),point({filed:'2026-02-01',accession:'0000000001-26-000001',value:120}),point({unit:'USD',value:90}),point({start:'2024-04-01',value:75})];
@@ -21,3 +22,20 @@ test('differences isolate currency and duration, handle zero and negative baseli
 });
 test('CSV preserves quotes and prevents spreadsheet formula execution without corrupting numeric negatives',()=>{assert.equal(csv([['=HYPERLINK("bad")','a,b',-20]]),'"\'=HYPERLINK(""bad"")","a,b","-20"');});
 test('source links reject script and lookalike hosts',()=>{assert.equal(safeSourceURL('javascript:alert(1)'),null);assert.equal(safeSourceURL('https://www.sec.gov.evil.test/'),null);assert.equal(safeSourceURL('http://www.sec.gov/'),null);assert.equal(safeSourceURL('https://www.sec.gov/Archives/example'),'https://www.sec.gov/Archives/example');});
+
+test('SEC null IFRS labels stay usable when sorting and selecting Canadian companies',()=>{
+ const index=JSON.parse(fs.readFileSync(new URL('../data/index.json',import.meta.url)));
+ const capture=JSON.parse(fs.readFileSync(new URL('../data/'+index.latest,import.meta.url)));
+ for(const cik of ['0001000275','0001017413']) {
+  const company=capture.companies.find(c=>c.cik===cik);
+  const metrics=orderedMetrics(company.metrics.map(m=>({...m,label:null})));
+  assert.equal(metrics[0].id,'ifrs-full:Revenue');
+  assert.equal(metricLabel(metrics[0]),'Revenue');
+  assert.ok(metrics.every(m=>typeof metricLabel(m)==='string'&&metricLabel(m).length>0));
+  assert.deepEqual([...new Set(metrics[0].facts.map(f=>f.unit))],['CAD']);
+  const periods=periodsFor(metrics[0],'CAD').filter(p=>p.type==='annual');
+  assert.ok(periods.length>0);
+  assert.ok(periods.every(p=>p.last.url.includes('/'+Number(cik)+'/')));
+ }
+ assert.equal(metricLabel({id:'ifrs-full:CashAndCashEquivalents',label:null}),'Cash And Cash Equivalents');
+});
