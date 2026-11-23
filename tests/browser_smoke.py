@@ -29,22 +29,39 @@ def main():
                 errors = []
                 page.on("pageerror", lambda error: errors.append(str(error)))
                 page.goto(f"http://127.0.0.1:{server.server_port}/example-tool/")
-                page.locator("#sample").click()
-                assert page.locator("#output").input_value() == "Halifax\nLangley\nVancouver"
-                assert "1 duplicate removed" in page.locator("#status").inner_text()
-                page.locator("#input").fill('<img src=x onerror="alert(1)">\n<img src=x onerror="alert(1)">')
-                assert page.locator("#output").input_value() == '<img src=x onerror="alert(1)">'
-                assert page.locator("img").count() == 0
-                page.locator("#clear").click()
-                assert page.locator("#output").input_value() == ""
-                page.locator("#sample").click()
+                page.locator('#companyName').filter(has_text='Shopify').wait_for()
+                assert page.locator('#currentValue').inner_text().startswith('USD ')
+                assert page.locator('#periodRows tr').count() > 0
+                page.locator('#companySearch').fill('Royal')
+                assert page.locator('.company-button').count() == 1
+                page.locator('.company-button').click()
+                assert page.locator('#companyName').inner_text() == 'Royal Bank of Canada'
+                assert page.locator('#unit').input_value() == 'CAD'
+                assert page.locator('#currentSource').get_attribute('href').startswith('https://www.sec.gov/Archives/')
+                page.locator('#periodType').select_option('annual')
+                assert page.locator('#changes .change-card').count() > 0
+                page.locator('#changes details').first.click()
+                assert page.locator('#changes details').first.get_attribute('open') is not None
+                with page.expect_download() as download:
+                    page.locator('#exportCSV').click()
+                assert download.value.suggested_filename.endswith('.csv')
+                page.locator('#companySearch').fill('<img onerror=alert(1)>')
+                assert page.locator('.company-button').count() == 0
+                assert page.locator('img').count() == 0
+                page.locator('#companySearch').fill('')
+                page.locator('[data-cik="0000320193"]').click()
+                page.locator('#metric').select_option('us-gaap:Assets')
+                assert page.locator('#periodType').input_value() == 'instant'
+                assert page.locator('#previousPeriod option').count() > 0
+                page.locator('#filingForm').select_option('10-K')
+                assert page.locator('.filing-form').first.inner_text() == '10-K'
                 page.screenshot(path=str(screenshots / "desktop.png"), full_page=True)
                 page.set_viewport_size({"width": 390, "height": 844})
                 assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth")
                 page.screenshot(path=str(screenshots / "mobile.png"), full_page=True)
                 assert not errors, errors
                 browser.close()
-            print("Browser checks passed: project subpath, sample, clear, safe text and mobile layout")
+            print("Browser checks passed: project subpath, SEC data, company/concept/period/form filters, evidence, CSV and mobile layout")
         finally:
             server.shutdown()
 

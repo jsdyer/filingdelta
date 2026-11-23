@@ -1,34 +1,33 @@
 <!doctype html>
-<html lang="en-CA">
+<html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="description" content="{{DESCRIPTION}}">
-  <title>{{TITLE}} · CoolCode</title>
-  <link rel="stylesheet" href="./style.css">
-  <script type="module" src="./app.mjs"></script>
-  {{VISIT_COUNTER}}
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="{{DESCRIPTION}}"><title>{{TITLE}} · CoolCode</title>
+<link rel="stylesheet" href="./style.css">{{VISIT_COUNTER}}
 </head>
-<body data-tool-id="{{TOOL_ID}}">
-  <a class="skip" href="#main">Skip to content</a>
-  <header><a href="https://coolcode.ca/">← CoolCode.ca</a><a href="{{SOURCE_URL}}">Source &amp; instructions ↗</a></header>
-  <main id="main">
-    <p class="eyebrow">Browser tool starter</p>
-    <h1>{{TITLE}}</h1>
-    <p class="intro">{{DESCRIPTION}}</p>
-    <section aria-labelledby="example-title">
-      <h2 id="example-title">Clean a list</h2>
-      <p>Trim spaces, skip blank lines and remove exact duplicates. Capitalization stays distinct.</p>
-      <div class="panels">
-        <div><label for="input">Your lines</label><textarea id="input" rows="10" maxlength="100000" spellcheck="false" placeholder="Paste one item per line"></textarea></div>
-        <div><label for="output">Cleaned lines</label><textarea id="output" rows="10" readonly spellcheck="false"></textarea></div>
-      </div>
-      <div class="actions"><button id="sample" type="button">Load example</button><button id="clear" type="button">Clear</button><button id="copy" type="button" hidden>Copy result</button></div>
-      <p id="status" role="status" aria-live="polite">Paste a list to begin.</p>
-      <noscript><p>This tool needs JavaScript to process your text. The source is available above.</p></noscript>
-    </section>
-    <aside aria-label="Privacy"><strong>Stays on your device.</strong> The browser processes your text in this tab. Reloading clears it.</aside>
-  </main>
-  <footer>Part of <a href="https://coolcode.ca/">the CoolCode collection</a>. {{ISSUE_LINK}}</footer>
-</body>
-</html>
+<body data-tool="{{TOOL_ID}}">
+<a class="skip" href="#workspace">Skip to comparisons</a>
+<header class="topbar"><a class="brand" href="https://coolcode.ca/">CoolCode<span class="brand-dot">●</span></a><div class="top-links"><a href="#method">Sources & method</a><a href="{{SOURCE_URL}}">GitHub ↗</a></div></header>
+<main>
+<section class="hero"><div><p class="eyebrow"><span class="live-dot"></span>PUBLIC FILINGS / FINANCIAL EVIDENCE</p><h1>Follow the figures.<br><em>Keep the receipts.</em></h1><p class="intro">Compare financial periods and trace changing reported values to the filings behind them. A small, deliberate sample of Canadian and US public companies.</p><a class="hero-link" href="#workspace">Open the ledger <span>↓</span></a></div><aside class="hero-note"><span class="note-number">01—06</span><h2>Filing Delta</h2><p>Same company.<br>Same concept. Same currency.<br>A clearer comparison.</p><div class="capture-label">LATEST SEC CAPTURE<span id="captureDate">Loading…</span></div></aside></section>
+<div class="metrics-strip" aria-label="Collection overview"><div><strong id="companyCount">—</strong><span>selected companies</span></div><div><strong id="filingCount">—</strong><span>recent financial filings</span></div><div><strong>2018+</strong><span>selected financial periods</span></div><div><strong id="captureCount">—</strong><span>captures retained</span></div></div>
+<p id="status" class="status" role="status" aria-live="polite">Loading the retained SEC collection…</p>
+<section id="workspace" class="workspace" aria-labelledby="workspaceTitle">
+<div class="section-heading"><div><p class="eyebrow">THE COMPARISON DESK</p><h2 id="workspaceTitle">Pick a company. Inspect a period.</h2></div><label class="snapshot-label">Dated capture<select id="capture" aria-label="Dated capture"></select></label></div>
+<div class="desk-grid"><aside class="company-panel"><label for="companySearch">Find a company</label><div class="search-wrap"><span aria-hidden="true">⌕</span><input id="companySearch" type="search" placeholder="Name, ticker or CIK…"></div><div id="companies" class="company-list" aria-label="Companies"></div><p class="small-note">A curated sample, not a complete market index. Country labels describe the company, not its reporting currency.</p></aside>
+<div class="main-panel"><div class="company-heading"><div><p id="companyMeta" class="eyebrow"></p><h2 id="companyName">Loading company…</h2><p id="companyIdentity" class="muted"></p></div><a id="companySource" class="outline-link" href="https://www.sec.gov/search-filings">SEC filings ↗</a></div>
+<div class="filters"><label>Reported concept<select id="metric"></select></label><label>Currency<select id="unit"></select></label><label>Period basis<select id="periodType"></select></label></div><p id="conceptDescription" class="concept-note"></p>
+<div class="period-selects"><label>Selected period<select id="currentPeriod"></select></label><span aria-hidden="true">↔</span><label>Compare with<select id="previousPeriod"></select></label></div>
+<div class="comparison-cards"><article class="value-card"><span>SELECTED PERIOD</span><strong id="currentValue">—</strong><p id="currentDetails"></p><a id="currentSource">Open source filing ↗</a></article><article class="value-card"><span>COMPARISON PERIOD</span><strong id="previousValue">—</strong><p id="previousDetails"></p><a id="previousSource">Open source filing ↗</a></article><article class="value-card delta-card"><span>REPORTED DIFFERENCE</span><strong id="deltaValue">—</strong><p id="deltaDetails"></p><small>No quarter reconstruction or currency conversion.</small></article></div>
+<p id="comparisonNote" class="context-note"></p>
+<div class="chart-header"><h3>Reported period history</h3><span>Latest filing value per exact period</span></div><div id="chart" class="chart" aria-label="Reported values across periods"></div>
+<div class="table-heading"><h3>Period ledger</h3><button id="exportCSV" class="button secondary" type="button">Download CSV ↓</button></div><div class="table-scroll"><table><caption class="sr-only">Financial periods for the selected concept and currency</caption><thead><tr><th>Period</th><th>Reported value</th><th>Latest filing</th><th>Evidence</th></tr></thead><tbody id="periodRows"></tbody></table></div><button id="morePeriods" class="text-button" type="button" hidden>Show all periods ↓</button>
+</div></div>
+</section>
+<section class="changes-section" aria-labelledby="changesTitle"><div class="section-heading"><div><p class="eyebrow">FOLLOW THE PAPER TRAIL</p><h2 id="changesTitle">When the same figure changes</h2></div><span id="changesCount" class="pill"></span></div><p class="section-intro">These are different values reported for the <strong>same concept, currency and exact period</strong>. A change can reflect a recast, correction or context difference; it is not, by itself, proof of a restatement.</p><div id="changes" class="changes-grid"></div></section>
+<section class="filings-section" aria-labelledby="filingsTitle"><div class="section-heading"><div><p class="eyebrow">GO TO THE ORIGINAL</p><h2 id="filingsTitle">Recent filing shelf</h2></div><label class="form-filter">Filing form<select id="filingForm"><option value="all">All selected forms</option></select></label></div><p class="section-intro">The SEC's recent submission window varies by company. This shelf is not its complete filing archive.</p><div id="filings" class="filing-grid"></div><button id="moreFilings" class="text-button" type="button">Show more filings ↓</button></section>
+<section id="method" class="method" aria-labelledby="methodTitle"><div><p class="eyebrow">HOW TO READ THIS</p><h2 id="methodTitle">Evidence first.<br>Comparisons with context.</h2><button id="exportJSON" class="button" type="button">Save selected company JSON ↓</button></div><div class="method-content"><details open><summary>What is collected?</summary><p>SEC EDGAR Submissions and Company Facts, captured once daily by a scheduled collector. Six companies, selected standard US GAAP and IFRS monetary concepts, and periods ending in 2018 or later. Custom company-specific XBRL tags and many metrics are outside this collection. All displayed numbers are reported source values.</p><p id="snapshotNote"></p></details><details><summary>What does “changed” mean?</summary><p>We compare the same company's exact taxonomy/concept, unit, start and end dates across SEC filings. Different dates or currencies are never joined. Multiple values in one filing are labelled ambiguous and excluded from the numeric comparison. Comparative figures can be recast or use different accounting contexts: inspect the original filings before drawing conclusions.</p></details><details><summary>Fiscal periods, currency and percentages</summary><p>“Annual” and “~3 months” group periods by their actual duration, not the SEC fiscal-year labels attached to a filing. Fiscal years need not match calendar years. We never subtract year-to-date facts to invent quarters. Displayed differences use the latest reported value for each exact period; percentage change divides by the absolute comparison value. A zero baseline has no percentage. Currency units remain separate.</p></details><details><summary>Refreshes, history and privacy</summary><p>Scheduled collection runs at 08:45 UTC; GitHub may delay it. The site shows the actual capture time. A failed collection keeps the last good capture. The latest 90 successful captures are available here; older committed captures remain in Git history. SEC filings may predate our first capture; that is filing history, not a claim that we collected those values at the time.</p><p>Search and filtering happen in your browser over the published snapshot. No financial account, API key or transaction information is requested. Downloads remain on your device. Source links open SEC pages; the site also loads CoolCode's shared visit counter.</p></details><p class="source-links"><a href="https://www.sec.gov/search-filings/edgar-application-programming-interfaces">SEC API documentation ↗</a><a href="https://www.sec.gov/about/developer-resources">SEC fair access ↗</a></p><div id="provenance" class="provenance"></div></div></section>
+</main>
+<footer><a href="https://coolcode.ca/">← More CoolCode tools</a><span>Filing Delta · Public filings, inspectable evidence</span>{{ISSUE_LINK}}</footer>
+<script type="module" src="./app.mjs"></script>
+</body></html>

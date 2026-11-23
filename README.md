@@ -1,116 +1,67 @@
-# CoolCode browser tool template
+# Filing Delta
 
-A starting point for independent tools at `coolcode.ca/<repo>/`: a working local-text
-example, responsive UI, Python standard-library build, Node tests, PR checks and Pages
-publication. No npm install is needed.
-
-## Using the example
+A public, browser-based SEC EDGAR explorer at [coolcode.ca/filingdelta/](https://coolcode.ca/filingdelta/). Compare reported financial periods, inspect different values reported for an identical period, and follow the original filings. No API key or financial account is needed.
 
 <!-- coolcode:guide -->
-The first occurrence of each trimmed line keeps its place. Compare the output with the original text before copying the result.
+Choose Shopify, Royal Bank of Canada, Canadian Natural Resources, Apple, Microsoft or Amazon, then select a financial concept, currency and period basis. The ledger compares exact reported periods and links each value to its SEC filing; a changed value may reflect a recast or context difference, not necessarily a restatement. Daily captures retain selected standard financial facts from 2018 onward, not a complete company or filing universe.
 <!-- /coolcode:guide -->
 
-For a real tool, replace this paragraph with one or two plain-text sentences
-about an example, a limit or how to interpret the results. Keep the source,
-coverage, refresh behaviour and a worked example in this README as appropriate.
-When updating a tool, revise any details its behaviour has changed and keep the
-homepage's shorter data-source sentence in `tool.json` accurate.
-The hub imports the marked note into the catalogue README.
+## What works
 
-## One-time template setup
+- Search the curated company sample by name, ticker or SEC CIK.
+- Select a US GAAP or IFRS financial concept and a reporting currency. Revenue aliases remain distinct concepts; the most recently reported revenue concept is the default.
+- Compare two annual, roughly quarterly, half-year, nine-month or point-in-time periods. Exact start/end dates remain visible. Different currencies or duration types are not combined.
+- Inspect a chart and ledger of latest reported values. Download all underlying filing-level facts for the current filter as CSV.
+- Inspect different values reported for **the same company, taxonomy/concept, currency, start and end dates**. Expand each period to see the original filing links.
+- Filter recent financial filings by form, including 10-K, 10-Q, 20-F, 40-F, 6-K, 8-K and their amendments.
+- Select an earlier retained collection capture, export a company JSON receipt and inspect source-response SHA-256 hashes.
 
-Enable **Settings → General → Template repository** here. This repository does not
-need Pages enabled: its workflow builds/tests but intentionally skips deployment.
-New copies also skip deployment until `scripts/init.py` sets the tool ID to match
-their repository name. This lets you create the repo before configuring Pages.
+For an interesting comparison, select **Royal Bank of Canada → Revenue → CAD → Annual**. Some exact periods have different values across filings; open the linked original reports to establish the accounting explanation. The first capture also contains historical SEC filing facts. These records do **not** imply the tool has been collecting since 2018.
 
-## Start a new tool
+## Sources and limitations
 
-1. Select **Use this template → Create a new repository**, choose owner `jsdyer`,
-   a unique lowercase name such as `my-tool`, and public visibility.
-2. Clone the new repository. Use Python 3.12+ and Node 24+.
-3. Set the identity, using a slug that matches the repository name:
+[SEC EDGAR API documentation](https://www.sec.gov/search-filings/edgar-application-programming-interfaces) and [SEC developer resources](https://www.sec.gov/about/developer-resources).
 
-```sh
-python3 scripts/init.py my-tool --title "My Tool" --description "Describe what this tool does."
+The collector fetches each company's public Submissions and Company Facts JSON. No registration is required. SEC's API does not support browser CORS, so visitors query published local snapshots, not a proxy or the live SEC API.
+
+Company Facts includes selected standardized, whole-entity US GAAP/IFRS facts. This tool retains only the concepts listed in `scripts/collect.py` and periods ending in 2018 or later. Custom tags, segment data, many metrics and older periods are excluded. An absent concept is not a zero. The submissions shelf uses the SEC **recent** window, which varies in length; it does not traverse older referenced submission files. Financial facts can contain filings outside that recent shelf and retain independent accession links.
+
+Country labels identify the company; they do not dictate reporting currency. Figures are not currency-converted. “Annual” and “~3 months” are duration groupings, not promises that fiscal and calendar quarters align. We never subtract year-to-date facts to invent quarterly values. Differences use the latest available report for each exact period; a percentage is the difference divided by the absolute comparison value. No percentage is shown for zero. The comparison is withheld for different duration types, durations more than 14 days apart or ambiguous values within the relevant filing.
+
+A changed value is a comparison signal, not an accounting conclusion. Recasts, corrections and reporting context differences can all matter. The source filing is authoritative. Different tags are never merged into a supposedly continuous series.
+
+## Refresh and retained history
+
+`.github/workflows/pages.yml` runs at **08:45 UTC daily**, on pushes/PRs and manually. Schedules may be delayed by GitHub. The visible capture time is the actual successful collection timestamp. Manual runs offer `refresh_data`; ordinary push and PR builds are offline.
+
+The six-company collector makes requests sequentially, at least one second apart, using:
+
+```
+CoolCode FilingDelta Jeffrey Dyer jeffdyer@gmail.com
 ```
 
-Review the category, tags and icon in `tool.json`. `access: "browser"` tells the main
-catalogue that the tool works immediately without installation. `--owner` supports a different
-GitHub owner, but only projects owned by `jsdyer` inherit the CoolCode domain.
+This identifies the app and contact under SEC fair access and remains well below the SEC's 10 requests/second limit. `SEC_USER_AGENT` can override the identity for a fork; it must include a contact email. No secret is required for this deployment.
 
-4. Replace the example in `web/` and its tests. Update the privacy explanation,
-   source attribution and README to describe the real tool.
-5. Test and preview:
+All twelve responses must parse and validate before a new snapshot is written. HTTP failures, invalid CIKs, malformed values or empty company results abort the refresh. The deployment and committed prior capture remain unchanged. Source response hashes identify the fetched inputs; the published data is a filtered normalized derivative, not the full raw API responses.
+
+`data/history/<UTC-timestamp>.json` holds each successful capture, and `data/index.json` selects the latest. The latest 90 successful captures are published in the date selector; older committed captures remain retrievable through Git history. This bounds the static site size while preserving the filing-level history within each snapshot. The workflow validates data, runs unit checks and browser smoke tests, and only then commits the data update and publishes. Git history additionally preserves changes. A new app initially has one collection capture; source filing history can already be much older.
+
+## Privacy and browser behavior
+
+Searches and filters run locally over the static data. No API key, financial account, pasted query or uploaded file is requested. No preferences are stored. CSV and JSON exports are browser downloads. Source links go to the SEC. The shared CoolCode visit-counter script records aggregate tool opens, not searches or financial selections.
+
+## Develop and verify
+
+Python standard library and browser ES modules; no npm install or build framework needed.
 
 ```sh
+python3 scripts/collect.py          # explicit network refresh, optional
+python3 scripts/validate_data.py    # offline
 node --test tests/*.test.mjs
 python3 -m unittest discover -s tests -v
-python3 scripts/build.py
-python3 -m http.server 8000 --directory dist
+python3 scripts/build.py            # offline; outputs dist/
 ```
 
-Open `http://localhost:8000/`. The example trims lines, skips blanks and removes exact
-duplicates, preserving first-seen order and capitalization. It processes the text in tab memory. Update that explanation if your app behaves differently.
+CI installs the test-only Playwright dependency from `tests/browser-requirements.txt` and runs `python3 tests/browser_smoke.py` at a project subpath. Tests cover exact period grouping, differing values, ambiguous contexts, currency/duration isolation, zero and negative baselines, source links, safe CSV, collection validation, browser filtering, downloads and mobile width.
 
-CI also tests the browser flow and mobile layout at a project subpath. Replace the
-sample assertions in `tests/browser_smoke.py` when implementing your own UI. To run
-that check locally (optional for ordinary preview):
-
-```sh
-python3 -m venv .venv
-. .venv/bin/activate
-python3 -m pip install -r tests/browser-requirements.txt
-python3 -m playwright install --with-deps chromium
-python3 tests/browser_smoke.py
-```
-
-Playwright is a test-only dependency; the app and its static build do not use it.
-
-## Publish and register
-
-When the actual tool is ready, in the **new tool repository** set **Settings → Pages → Build and deployment →
-Source → GitHub Actions**. Push to `main`, or manually run **Browser tool · Check and
-publish** after enabling Pages. If the initial deployment ran before Pages was enabled,
-enable it and rerun. PRs only check/build and provide a downloadable preview artifact.
-
-Keep `{{VISIT_COUNTER}}` in the page head and `{{ISSUE_LINK}}` in the footer when replacing the starter UI. The build enables these for initialized CoolCode repositories. The shared counter records aggregate opens on coolcode.ca by public tool ID. Toolbox inputs and URL parameters are excluded. The issue link opens a reporting form with the tool already selected.
-
-Keep app-owned asset paths and module imports relative. Check `https://coolcode.ca/my-tool/`.
-Do not add a CNAME or set `coolcode.ca` as this project's custom domain; the account
-site supplies it. Only successful `main` builds deploy.
-
-After verifying the app, copy the reviewed object from `tool.json` into `data/tools.json`
-in [the main site](https://github.com/jsdyer/jsdyer.github.io). Each tool still builds
-independently. Update the hub record when listing metadata changes; the hub is the
-authority for discovery. Ordinary app updates touch only this repository.
-
-The main site separates **Use in your browser** from **Install yourself**. An app
-that asks for a file is still a browser tool. Standalone Linux packages should start
-in their own repositories with their own build/release workflow, rather than copying
-this browser-only scaffold. Their hub record uses `access: "install"`, links to an
-installation guide, and includes `requirements`.
-
-## Files
-
-| Path | Purpose |
-| --- | --- |
-| `tool.json` | Page metadata and a ready-to-copy catalogue record |
-| `web/` | HTML, responsive CSS, DOM interactions and separate model logic |
-| `scripts/build.py` | Escape metadata and build `web/` into `dist/` |
-| `scripts/init.py` | Set a new project's identity |
-| `tests/` | Application and builder tests |
-| `.github/workflows/pages.yml` | Check PRs and publish successful main builds |
-| `AGENTS.md` | Instructions for future coding work |
-
-Namespace optional storage as `coolcode:<tool-id>:<key>`; CoolCode paths share a
-browser origin. Don't save pasted text/uploads by default. Document external APIs
-and send only the information needed for the selected action. Never embed secrets.
-
-Scheduled refresh is opt-in. Validate source data before deploying, display its date,
-and preserve the last good deployment on failure. Public-repository schedules can
-stop after 60 days without repository activity.
-
-Templates don't propagate future edits automatically. Adopt fixes explicitly and
-consider a versioned reusable workflow once several tools confirm the shared process.
-Choose and add the intended software license before distributing a new project.
+`web/` contains the application; `data/` contains dated facts; `scripts/` contains collection/build/validation; `tests/` contains checks. No CNAME is used. The account Pages site supplies the CoolCode domain.

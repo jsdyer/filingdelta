@@ -51,6 +51,11 @@ def build(root=ROOT):
     with tempfile.TemporaryDirectory(prefix="coolcode-tool-") as temporary:
         stage = Path(temporary) / "site"
         shutil.copytree(web, stage)
+        data = root / "data"
+        if data.exists():
+            if data.is_symlink() or any(p.is_symlink() for p in data.rglob("*")):
+                raise ValueError("data/ must not contain symlinks")
+            shutil.copytree(data, stage / "data")
         index = stage / "index.html"
         page = index.read_text(encoding="utf-8")
         for token, key in {"TITLE": "title", "DESCRIPTION": "description", "TOOL_ID": "id", "SOURCE_URL": "source"}.items():

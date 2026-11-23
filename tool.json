@@ -1,16 +1,22 @@
 {
-  "id": "coolcode-tool-template",
-  "title": "CoolCode Tool Starter",
-  "description": "A browser-only example that trims lines and removes exact duplicates.",
-  "category": "security",
-  "tags": ["text", "lines", "duplicates"],
-  "icon": "scan-search",
-  "url": "/coolcode-tool-template/",
-  "source": "https://github.com/jsdyer/coolcode-tool-template",
+  "id": "filingdelta",
+  "title": "Filing Delta",
+  "description": "Compare reported financial periods and trace changed values back to SEC filings.",
+  "category": "money",
+  "tags": [
+    "sec",
+    "filings",
+    "xbrl",
+    "financial-statements",
+    "canada"
+  ],
+  "icon": "chart-no-axes-combined",
+  "url": "/filingdelta/",
+  "source": "https://github.com/jsdyer/filingdelta",
   "hosting": "project",
   "access": "browser",
   "data_info": {
-    "mode": "local",
-    "detail": "The browser reads the text you paste and compares its lines."
+    "mode": "snapshot",
+    "detail": "Dated SEC EDGAR filings and selected financial facts for six Canadian and US companies; refreshed daily."
   }
 }
