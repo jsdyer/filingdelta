@@ -75,3 +75,11 @@ python3 scripts/build.py            # offline; outputs dist/
 CI installs the test-only Playwright dependency from `tests/browser-requirements.txt` and runs `python3 tests/browser_smoke.py` at a project subpath. Tests cover exact period grouping, differing values, ambiguous contexts, currency/duration isolation, zero and negative baselines, source links, safe CSV, collection validation, browser filtering, downloads and mobile width.
 
 `web/` contains the application; `data/` contains dated facts; `scripts/` contains collection/build/validation; `tests/` contains checks. No CNAME is used. The account Pages site supplies the CoolCode domain.
+
+<!-- schedule-reliability -->
+## Schedule reliability
+
+Public GitHub repositories can have scheduled workflows disabled after 60 days of inactivity. A separate weekly [schedule guard](.github/workflows/schedule-guard.yml) calls GitHub's enable-workflow API for an explicit list of refresh workflows and itself. It can restore workflows disabled for inactivity, preserves manually disabled workflows, and runs independently of collection failures.
+
+This is an interim mitigation, not a scheduling guarantee: GitHub does not document active-workflow renewal as a permanent exemption, and scheduled runs can be delayed or dropped. A scheduler on our own Linux server is the planned independent trigger. The guard does not collect data, create dummy commits, or change source/check timestamps; successful collection and published data freshness still need monitoring.
+<!-- /schedule-reliability -->
