@@ -1,7 +1,11 @@
 {
   "schemaVersion": 1,
-  "latest": "history/2026-11-24T104702Z.json",
+  "latest": "history/2026-11-24T194226Z.json",
   "captures": [
+    {
+      "path": "history/2026-11-24T194226Z.json",
+      "label": "2026-11-24T194226Z"
+    },
     {
       "path": "history/2026-11-24T104702Z.json",
       "label": "2026-11-24T104702Z"
